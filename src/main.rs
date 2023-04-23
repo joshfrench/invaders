@@ -45,6 +45,9 @@ fn setup(
 }
 
 #[derive(Component)]
+struct Lazer;
+
+#[derive(Component)]
 struct Player {
     delta_x: f32,
 }
@@ -84,6 +87,31 @@ fn player(
 
         // Decelerate
         player.delta_x *= 0.75;
+        if firing {
+            commands
+                .spawn_empty()
+                .insert(SpriteSheetBundle {
+                    texture_atlas: atlas_handle.clone(),
+                    transform: Transform::from_translation(Vec3::new(
+                        trans.translation.x,
+                        trans.translation.y + 24.0,
+                        0.0,
+                    )),
+                    sprite: TextureAtlasSprite::new(2),
+                    ..default()
+                })
+                .insert(Lazer {});
+        };
+    }
+}
+
+fn lazer_movement(mut query: Query<(Entity, &Lazer, &mut Transform)>, mut commands: Commands) {
+    for (entity, _, mut trans) in query.iter_mut() {
+        trans.translation += Vec3::new(0.0, 4.0, 0.0);
+
+        if trans.translation.y > 240.0 {
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -154,5 +182,6 @@ fn main() {
         .add_startup_system(setup)
         .add_system(player)
         .add_system(bug_movement)
+        .add_system(lazer_movement)
         .run();
 }
