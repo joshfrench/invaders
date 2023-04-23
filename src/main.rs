@@ -168,6 +168,24 @@ fn bug_movement(mut query: Query<(&mut Bug, &mut Transform)>) {
     }
 }
 
+fn bug_zapper(
+    lazer_query: Query<(Entity, &Lazer, &Transform)>,
+    collider_query: Query<(Entity, &Bug, &Transform)>,
+    mut commands: Commands,
+) {
+    for (entity, _, trans) in lazer_query.iter() {
+        let laser_pos = Vec2::new(trans.translation.x, trans.translation.y);
+        for (bug_entity, _, bug_transform) in collider_query.iter() {
+            let bug_pos = Vec2::new(bug_transform.translation.x, bug_transform.translation.y);
+
+            if bug_pos.distance(laser_pos) < 24.0 {
+                commands.entity(bug_entity).despawn();
+                commands.entity(entity).despawn();
+            }
+        }
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -183,5 +201,6 @@ fn main() {
         .add_system(player)
         .add_system(bug_movement)
         .add_system(lazer_movement)
+        .add_system(bug_zapper)
         .run();
 }
